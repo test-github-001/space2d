@@ -34,7 +34,7 @@ const getDistance = (x1, y1, x2, y2) => Math.sqrt( Math.pow( (x1 - x2), 2) + Mat
 class Star {
 
     constructor() {
-        this.speed = (0.1 + Math.random()) / 5;
+        this.speed = 0.1 + Math.random();
         this.weight = 2 + Math.ceil(Math.random() * 8);
         let fuel = 75 + Math.ceil(Math.random() * 20); // % from weight
         this.fuelWeight = this.weight / 100 * fuel
@@ -124,8 +124,8 @@ class Star {
         let dx = this.x - x;
         let dy = this.y - y;
         let G = weight / distance;
-        this.stepX -= dx * G**3;
-        this.stepY -= dy * G**3;
+        this.stepX -= (dx * G) / 100;
+        this.stepY -= (dy * G) / 100;
     }
 }
 
