@@ -35,7 +35,7 @@ class Star {
 
     constructor() {
         this.speed = 0.1 + Math.random();
-        this.weight = 2 + Math.ceil(Math.random() * 8);
+        this.weight = 3 + Math.ceil(Math.random() * 27);
         let fuel = 75 + Math.ceil(Math.random() * 20); // % from weight
         this.fuelWeight = this.weight / 100 * fuel
         this.usedWeight = this.weight - this.fuelWeight;
@@ -43,16 +43,16 @@ class Star {
         this.color = this.getColor();
         this.size = this.getSize();
         // 0 - top; 1 - right; 2 - bottom; 3 - left.
-        let starside = Math.floor(Math.random() * 4);
-        this.x = (starside === 0 || starside === 2) ? Math.floor(Math.random() * vw) 
-            : (starside === 1)? vw + this.size : 0 - this.size;
-        this.y = (starside === 1 || starside === 3) ? Math.floor(Math.random() * vh)
-            : (starside === 2) ? vh + this.size : 0 - this.size;
+        let starSide = Math.floor(Math.random() * 4);
+        this.x = (starSide === 0 || starSide === 2) ? Math.floor(Math.random() * vw) 
+            : (starSide === 1)? vw + this.size : 0 - this.size;
+        this.y = (starSide === 1 || starSide === 3) ? Math.floor(Math.random() * vh)
+            : (starSide === 2) ? vh + this.size : 0 - this.size;
 
-        let targetX = (starside === 0 || starside === 2) ? Math.floor(Math.random() * vw) 
-            : (starside === 3)? vw + this.size : 0 - this.size;
-        let targetY = (starside === 1 || starside === 3) ? Math.floor(Math.random() * vh)
-            : (starside === 0) ? vh + this.size : 0 - this.size;
+        let targetX = (starSide === 0 || starSide === 2) ? Math.floor(Math.random() * vw) 
+            : (starSide === 3)? vw + this.size : 0 - this.size;
+        let targetY = (starSide === 1 || starSide === 3) ? Math.floor(Math.random() * vh)
+            : (starSide === 0) ? vh + this.size : 0 - this.size;
         
         let dx = targetX - this.x; // - 10
         let dy = targetY - this.y; //  4.5
@@ -63,7 +63,6 @@ class Star {
         this.stepY = dy / steps;
         
         this.isExist = true;
-        console.log('New',{...this})
     }
 
     draw() {
@@ -87,19 +86,20 @@ class Star {
     }
 
     burn() {
-        let fuelNeed = this.weight / 1000;
+        let fuelNeed = this.weight ** 2 / 10000;
         if (this.fuelWeight > fuelNeed) {
             this.fuelWeight -= fuelNeed;
             this.usedWeight += fuelNeed * 2;
             this.weight += fuelNeed;
+            this.temperature = (this.temperature < this.getTemperature()) ? this.temperature + 1 : this.temperature - 1;
         } else if (this.temperature > 1) {
             this.temperature -= 1 / this.weight;
             this.color = this.getColor();
         } else {
             this.isExist = false;
-            explosionsArr.push( new Explosion(this.x, this.y, this.weight) );
+            explosionsArr.push( new Explosion(this.x, this.y, this.weight / 2) );
+            if (this.weight > 50) starsArr.push( new Star() );
         }
-        this.temperature = this.getTemperature();
         this.color = this.getColor();
         this.size = this.getSize();
         
@@ -117,13 +117,13 @@ class Star {
     }
 
     getSize() {
-        return Math.sqrt(this.weight);
+        return Math.sqrt(this.weight) / 3;
     }
 
     getGravity(x, y, weight, distance) {
         let dx = this.x - x;
         let dy = this.y - y;
-        let G = weight / distance;
+        let G = weight / (distance * distance);
         this.stepX -= (dx * G) / 100;
         this.stepY -= (dy * G) / 100;
     }
@@ -180,7 +180,7 @@ function checkStarsDistance() {
     for (let i = 0; i < starsArr.length - 1; i++) {
         for (let j = i+1; j < starsArr.length; j++) {
             let distance = getDistance(starsArr[i].x, starsArr[i].y, starsArr[j].x, starsArr[j].y);
-            if (distance < (starsArr[i].size + starsArr[j].size)) confluence(starsArr[i], starsArr[j]);
+            if (distance < Math.abs(starsArr[i].size - starsArr[j].size)) confluence(starsArr[i], starsArr[j]);
             else {
                 starsArr[i].getGravity(starsArr[j].x, starsArr[j].y, starsArr[j].weight, distance);
                 starsArr[j].getGravity(starsArr[i].x, starsArr[i].y, starsArr[i].weight, distance);
@@ -190,9 +190,6 @@ function checkStarsDistance() {
 }
 
 function confluence(starA, starB) {
-    console.log('A', {...starA});
-    console.log('B', {...starB});
-
     let [bigger, smaller] = (starA.weight > starB.weight) ? [starA, starB] : [starB, starA];
     bigger.weight += smaller.fuelWeight + smaller.usedWeight / 2;
     bigger.fuelWeight += smaller.fuelWeight;
@@ -201,10 +198,6 @@ function confluence(starA, starB) {
     //smaller.fuelWeight = 0;
     //smaller.usedWeight /= 2;
     smaller.isExist = false;
-
-    console.log('R', {...bigger});
-
-    setTimeout(bigger => console.log('confluence bigger', bigger), 0);
 }
 
 // ANIMATION
