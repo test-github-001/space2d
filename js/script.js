@@ -2,6 +2,11 @@
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
+
+ctx.font         = '7px Roboto-Regular';
+ctx.fillStyle = 'orangered';
+ctx.textBaseline = 'top';
+
 document.body.prepend(canvas);
 
 var background = new Image();
@@ -73,6 +78,12 @@ class Star {
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
         ctx.fillStyle = this.color;
         ctx.fill();
+        
+        if (this.size > 10) {
+            let text = `F:${this.fuelWeight};U:${this.usedWeight}\nt:${this.temperature}`;
+            ctx.fillStyle = '#00ff00';
+            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size);   
+        }
 
         this.burn();
 
