@@ -79,10 +79,14 @@ class Star {
         ctx.fillStyle = this.color;
         ctx.fill();
         
-        if (this.size > 10) {
-            let text = `F:${this.fuelWeight};U:${this.usedWeight}\nt:${this.temperature}`;
+        if (this.size > 12) {
+            let textF = `F:${this.fuelWeight}`;
+            let textU = `U:${this.usedWeight}`;
+            let textT = `t:${this.temperature}`;
             ctx.fillStyle = '#00ff00';
-            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size);   
+            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size);
+            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size - 10);
+            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size - 20);
         }
 
         this.burn();
