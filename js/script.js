@@ -3,7 +3,7 @@
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-ctx.font         = '7px Roboto-Regular';
+ctx.font = '9px Roboto-Regular';
 ctx.fillStyle = 'orangered';
 ctx.textBaseline = 'top';
 
@@ -14,23 +14,24 @@ background.src = "./src/images/space-bg.jpg";
 background.width = 3840;
 background.height = 2400;
 
-let vw, vh, bgX, bgY, bgW, bgH, maxStars;
+let vw, vh, bgX, bgY, bgW, bgH, outside, maxStars;
 
 window.addEventListener('resize', updateSizes);
 function updateSizes() {
     canvas.width = vw = window.innerWidth;
     canvas.height = vh = window.innerHeight;
 
-    let k_w = background.width / vw;
-    let k_h = background.height / vh;
-    let k = k_w < k_h ? k_w : k_h;
-    bgW = Math.floor(vw * k);
-    bgH = Math.floor(vh * k);
+    let k_w = background.width / vw;  // 3840/360 = 10.67
+    let k_h = background.height / vh; // 2400/720 = 3,33
+    let k = k_w < k_h ? k_w : k_h;    // 3,33
+    bgW = Math.floor(vw * k);         // 1198
+    bgH = Math.floor(vh * k);         // 2397
     bgX = Math.floor((background.width - bgW) / 2);
     bgY = Math.floor((background.height - bgH) / 2);
 
-    maxStars = Math.ceil(vw * vh / 10000);
-    //maxStars = 1;
+    outside = (vw > vh) ? Math.floor(vw / 4) : Math.floor(vh / 4);
+
+    maxStars = vw * vh / 250;
 }
 updateSizes();
 
@@ -38,20 +39,19 @@ const getDistance = (x1, y1, x2, y2) => Math.sqrt( Math.pow( (x1 - x2), 2) + Mat
 
 class Star {
 
-    constructor() {
-        this.speed = 0.1 + Math.random();
-        this.weight = 3 + Math.ceil(Math.random() * 27);
-        let fuel = 75 + Math.ceil(Math.random() * 20); // % from weight
-        this.fuelWeight = this.weight / 100 * fuel
-        this.usedWeight = this.weight - this.fuelWeight;
+    constructor(x, y) {
+        this.speed = 0.001 + Math.random() / 1000;
+        this.fuelWeight = 4 + Math.ceil(Math.random() * 6);
+        this.usedWeight = 2 + Math.ceil(Math.random() * 8);
+        this.weight = this.getWeight();
         this.temperature = this.getTemperature();
         this.color = this.getColor();
         this.size = this.getSize();
         // 0 - top; 1 - right; 2 - bottom; 3 - left.
         let starSide = Math.floor(Math.random() * 4);
-        this.x = (starSide === 0 || starSide === 2) ? Math.floor(Math.random() * vw) 
+        this.x = x || (starSide === 0 || starSide === 2) ? Math.floor(Math.random() * vw) 
             : (starSide === 1)? vw + this.size : 0 - this.size;
-        this.y = (starSide === 1 || starSide === 3) ? Math.floor(Math.random() * vh)
+        this.y = y || (starSide === 1 || starSide === 3) ? Math.floor(Math.random() * vh)
             : (starSide === 2) ? vh + this.size : 0 - this.size;
 
         let targetX = (starSide === 0 || starSide === 2) ? Math.floor(Math.random() * vw) 
@@ -80,55 +80,60 @@ class Star {
         ctx.fill();
         
         if (this.size > 12) {
-            let textF = `F:${Math.ceil(this.fuelWeight)}`;
-            let textU = `U:${Math.floor(this.usedWeight)}`;
-            let textT = `t:${Math.round(this.temperature)}`;
+            let text1 = `Fuel: ${Math.ceil(this.fuelWeight)} / Used: ${Math.floor(this.usedWeight)}`;
+            let text2 = `weight: ${Math.ceil(this.weight)};`;
+            let text3 = `t: ${Math.round(this.temperature)}; R: ${Math.round(this.size)}`;
             ctx.fillStyle = '#00ff00';
-            ctx.fillText  (textF, this.x + this.size + 5, this.y - this.size);
-            ctx.fillText  (textU, this.x + this.size + 5, this.y - this.size + 12);
-            ctx.fillText  (textT, this.x + this.size + 5, this.y - this.size + 24);
+            ctx.fillText  (text1, this.x + this.size + 5, this.y - this.size);
+            ctx.fillText  (text2, this.x + this.size + 5, this.y - this.size + 12);
+            ctx.fillText  (text3, this.x + this.size + 5, this.y - this.size + 24);
         }
 
         this.burn();
 
-        if (this.x + this.size + this.speed < 0
-        || this.x - this.size - this.speed > vw
-        || this.y + this.size + this.speed < 0
-        || this.y - this.size - this.speed > vh)
+        if (this.x + this.size + this.speed < -outside
+        || this.x - this.size - this.speed > vw + outside
+        || this.y + this.size + this.speed < -outside
+        || this.y - this.size - this.speed > vh + outside)
         {
             this.isExist = false;
         }
     }
 
     burn() {
-        let fuelNeed = this.weight ** 2 / 1000;
+        let fuelNeed = this.weight / 10000;
         if (this.fuelWeight > fuelNeed) {
             this.fuelWeight -= fuelNeed;
             this.usedWeight += fuelNeed * 2;
             this.weight += fuelNeed;
             this.temperature = (this.temperature < this.getTemperature()) ? this.temperature + 1 : this.temperature - 1;
         } else if (this.temperature > 1) {
-            this.temperature -= 1 / this.weight;
+            this.temperature -= 100 / this.weight;
             this.color = this.getColor();
         } else {
             this.isExist = false;
-            explosionsArr.push( new Explosion(this.x, this.y, this.weight / 2) );
-            if (this.weight > 50) starsArr.push( new Star() );
+            explosionsArr.push( new Explosion(this.x, this.y, this.weight, this.size) );
+            if (this.weight > 50) starsArr.push( new Star(this.x, this.y) );
         }
+        this.weight = this.getWeight();
         this.color = this.getColor();
         this.size = this.getSize();
         
     }
 
     getTemperature() {
-        return Math.ceil(this.fuelWeight * this.fuelWeight + this.usedWeight);
+        return Math.ceil( (this.fuelWeight / this.weight) * 1000 );
     }
 
     getColor() {
-        if (this.temperature >= 765) return `rgb(  0, 255, 255)`;
+        if (this.temperature >= 765) return `rgb(0, 255, 255)`;
         if (this.temperature > 509)  return `rgb(${255 - (this.temperature - 510)}, 255, 255)`;
         if (this.temperature > 254)  return `rgb(255, 255, ${this.temperature - 255})`;
         return `rgb(255, ${this.temperature}, 0)`;
+    }
+
+    getWeight() {
+        return this.fuelWeight + this.usedWeight * 2;
     }
 
     getSize() {
@@ -139,8 +144,8 @@ class Star {
         let dx = this.x - x;
         let dy = this.y - y;
         let G = weight / (distance * distance);
-        this.stepX -= (dx * G) / 100;
-        this.stepY -= (dy * G) / 100;
+        this.stepX -= (dx * G) / 1000;
+        this.stepY -= (dy * G) / 1000;
     }
 }
 
@@ -161,12 +166,12 @@ canvas.addEventListener('click', event => {
 });
 
 class Explosion {
-    constructor(x, y, weight) {
+    constructor(x, y, weight, size) {
         this.x = x;
         this.y = y;
-        this.size = 1;
-        this.opacity = 1;
-        this.opacitySub = 0.07 / weight;
+        this.size = size / 2;
+        this.opacity = 0.5;
+        this.opacitySub = 0.003;
         this.colorG = 255;
         this.colorB = 255;
 
@@ -177,10 +182,10 @@ class Explosion {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
         ctx.strokeStyle = `rgba(128, ${this.colorG}, ${this.colorB}, ${this.opacity})`;
-        ctx.lineWidth = this.size / 10;
+        ctx.lineWidth = this.size / 2;
         ctx.stroke();
 
-        this.size += 1 / this.size;
+        this.size += 1;
         if (this.colorB > 1) this.colorB -= 2;
         if (this.colorG > 0) this.colorG--;
         this.opacity = (this.opacity >= this.opacitySub) ? this.opacity - this.opacitySub : 0
@@ -195,7 +200,7 @@ function checkStarsDistance() {
     for (let i = 0; i < starsArr.length - 1; i++) {
         for (let j = i+1; j < starsArr.length; j++) {
             let distance = getDistance(starsArr[i].x, starsArr[i].y, starsArr[j].x, starsArr[j].y);
-            if (distance < Math.abs(starsArr[i].size - starsArr[j].size)) confluence(starsArr[i], starsArr[j]);
+            if (distance < Math.abs(starsArr[i].size - starsArr[j].size) * 1.5) confluence(starsArr[i], starsArr[j]);
             else {
                 starsArr[i].getGravity(starsArr[j].x, starsArr[j].y, starsArr[j].weight, distance);
                 starsArr[j].getGravity(starsArr[i].x, starsArr[i].y, starsArr[i].weight, distance);
@@ -206,9 +211,10 @@ function checkStarsDistance() {
 
 function confluence(starA, starB) {
     let [bigger, smaller] = (starA.weight > starB.weight) ? [starA, starB] : [starB, starA];
-    bigger.weight += smaller.fuelWeight + smaller.usedWeight / 2;
+    bigger.weight += smaller.fuelWeight + smaller.usedWeight * 0.7;
     bigger.fuelWeight += smaller.fuelWeight;
     bigger.usedWeight += smaller.usedWeight / 2;
+    bigger.temperature += smaller.fuelWeight * 0.05;
 
     //smaller.fuelWeight = 0;
     //smaller.usedWeight /= 2;
