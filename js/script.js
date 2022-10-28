@@ -80,13 +80,13 @@ class Star {
         ctx.fill();
         
         if (this.size > 12) {
-            let textF = `F:${this.fuelWeight}`;
-            let textU = `U:${this.usedWeight}`;
-            let textT = `t:${this.temperature}`;
+            let textF = `F:${Math.ceil(this.fuelWeight)}`;
+            let textU = `U:${Math.floor(this.usedWeight)}`;
+            let textT = `t:${Math.round(this.temperature)}`;
             ctx.fillStyle = '#00ff00';
             ctx.fillText  (textF, this.x + this.size + 5, this.y - this.size);
-            ctx.fillText  (textU, this.x + this.size + 5, this.y - this.size - 10);
-            ctx.fillText  (textT, this.x + this.size + 5, this.y - this.size - 20);
+            ctx.fillText  (textU, this.x + this.size + 5, this.y - this.size + 12);
+            ctx.fillText  (textT, this.x + this.size + 5, this.y - this.size + 24);
         }
 
         this.burn();
@@ -101,7 +101,7 @@ class Star {
     }
 
     burn() {
-        let fuelNeed = this.weight ** 2 / 10000;
+        let fuelNeed = this.weight ** 2 / 1000;
         if (this.fuelWeight > fuelNeed) {
             this.fuelWeight -= fuelNeed;
             this.usedWeight += fuelNeed * 2;
