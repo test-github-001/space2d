@@ -84,9 +84,9 @@ class Star {
             let textU = `U:${this.usedWeight}`;
             let textT = `t:${this.temperature}`;
             ctx.fillStyle = '#00ff00';
-            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size);
-            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size - 10);
-            ctx.fillText  (text, this.x + this.size + 5, this.y - this.size - 20);
+            ctx.fillText  (textF, this.x + this.size + 5, this.y - this.size);
+            ctx.fillText  (textU, this.x + this.size + 5, this.y - this.size - 10);
+            ctx.fillText  (textT, this.x + this.size + 5, this.y - this.size - 20);
         }
 
         this.burn();
