@@ -284,7 +284,8 @@ class BlackHole {
 
         this.tintLineSizeK = 1;
         this.isRiseTintLineSizeK = false;
-        this.tintLineStep = 0.005;
+
+        this.tintLineStep = 0.005; // LineSize & Opcity
 
         this.stepX = star.stepX / this.size;
         this.stepY = star.stepY / this.size;
@@ -294,8 +295,8 @@ class BlackHole {
 
     draw() {
         // PREPARE
-        let ellipseSizeX = this.size * 0.3;
-        let ellipseSizeY = this.size * 1.9;
+        let ellipseSizeX = this.size * 0.2;
+        let ellipseSizeY = this.size * 1.3;
 
         let backEllipseStart = SIZE_PI_DIV_2 + SIZE_2PI;
         let backEllipseEnd = SIZE_PI_DIV_2 + SIZE_PI;
@@ -304,7 +305,7 @@ class BlackHole {
         let frontEllipseEnd = SIZE_PI_DIV_2;
 
         //
-        let ellipseWideLineWidth =  this.size / 3;
+        let ellipseWideLineWidth =  this.size / 2;
         let ellipseTintLineWidth = (ellipseWideLineWidth / 2) * this.tintLineSizeK;
 
         let backEllipseWideLineWidth = (ellipseWideLineWidth > 2) ? ellipseWideLineWidth - 1 : ellipseWideLineWidth;
@@ -325,10 +326,16 @@ class BlackHole {
         this.drawElipse(ellipseSizeX, ellipseSizeY, backEllipseStart, backEllipseEnd, yellow, backEllipseTintLineWidth);
         
         // BLACK HOLE
+        ctx.shadowColor = 'rgb(200, 0, 200)';
+        ctx.shadowBlur = this.size;
+
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, SIZE_2PI, false);
         ctx.fillStyle = `rgb(0, 0, 0)`;
         ctx.fill();
+
+        ctx.shadowColor = 'rgba(0, 0, 0, 0)';
+
         // color mask
         if (this.colorOpacity > 0) {
             ctx.beginPath();
@@ -400,14 +407,14 @@ class BlackHole {
     }
 
     updateEllipces() {
-        if (this.ellipseOpacity < 1) this.ellipseOpacity += this.ellipseOpacitySub;
+        if (this.ellipseOpacity < 0.6) this.ellipseOpacity += this.ellipseOpacitySub;
 
         if (this.isRiseTintLineOpcity) {
             this.tintLineOpcity += this.tintLineStep;
-            if (this.tintLineOpcity > 0.7) this.isRiseTintLineOpcity = false;
+            if (this.tintLineOpcity > 0.5) this.isRiseTintLineOpcity = false;
         } else {
             this.tintLineOpcity -= this.tintLineStep;
-            if (this.tintLineOpcity < 0.3) this.isRiseTintLineOpcity = true;
+            if (this.tintLineOpcity < 0.4) this.isRiseTintLineOpcity = true;
         }
 
         if (this.isRiseTintLineSizeK) {
